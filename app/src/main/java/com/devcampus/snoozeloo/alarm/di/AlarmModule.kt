@@ -10,6 +10,7 @@ import com.devcampus.snoozeloo.alarm.domain.repository.AlarmRepository
 import com.devcampus.snoozeloo.alarm.domain.use_case.UpsertAlarmUseCase
 import com.devcampus.snoozeloo.alarm.presentation.edit.EditAlarmViewModel
 import com.devcampus.snoozeloo.alarm.presentation.list.AlarmListViewModel
+import com.devcampus.snoozeloo.alarm.presentation.trigger.AlarmTriggerViewModel
 import com.devcampus.snoozeloo.ringtone.data.AndroidRingtonePlayer
 import com.devcampus.snoozeloo.ringtone.data.AndroidRingtoneRepository
 import com.devcampus.snoozeloo.ringtone.domain.Ringtone
@@ -46,4 +47,5 @@ val alarmModule = module {
     viewModel { AlarmListViewModel(get(), get()) }
     viewModel { (alarmId: Long?) -> EditAlarmViewModel(get(), get(), get(), alarmId) }
     viewModel { (ringtone: Ringtone) -> RingtoneListViewModel(get(), get(), ringtone) }
+    viewModel { (alarmId: Long) -> AlarmTriggerViewModel(get(), alarmId)  }
 }
