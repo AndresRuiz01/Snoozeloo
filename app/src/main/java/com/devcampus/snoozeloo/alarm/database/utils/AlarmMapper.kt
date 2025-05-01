@@ -11,6 +11,7 @@ fun AlarmEntity.toAlarm(): Alarm {
         days = this.days,
         volume = this.volume,
         vibrate = this.vibrate,
+        ringtone = this.ringtone,
         enabled = this.enabled
     )
 }
@@ -23,6 +24,7 @@ fun Alarm.toAlarmEntity(): AlarmEntity {
         days = this.days,
         volume = this.volume,
         vibrate = this.vibrate,
+        ringtone = this.ringtone,
         enabled = this.enabled
     )
 }

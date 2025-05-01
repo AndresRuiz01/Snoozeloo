@@ -1,6 +1,8 @@
 package com.devcampus.snoozeloo.alarm.database.utils
 
 import androidx.room.TypeConverter
+import com.devcampus.snoozeloo.ringtone.domain.Ringtone
+import kotlinx.serialization.json.Json
 import java.time.DayOfWeek
 import java.time.LocalTime
 
@@ -31,6 +33,16 @@ class AlarmConverters {
         return value.split(",").map {
             DayOfWeek.valueOf(it)
         }
+    }
+
+    @TypeConverter
+    fun toRingtone(value: String): Ringtone? {
+        return Json.decodeFromString<Ringtone?>(value)
+    }
+
+    @TypeConverter
+    fun fromRingtone(value: Ringtone?): String {
+        return Json.encodeToString(value)
     }
 
 }

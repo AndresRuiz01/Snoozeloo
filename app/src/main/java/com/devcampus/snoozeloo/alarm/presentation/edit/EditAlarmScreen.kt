@@ -1,58 +1,79 @@
 package com.devcampus.snoozeloo.alarm.presentation.edit
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.repeatOnLifecycle
-import com.devcampus.snoozeloo.alarm.presentation.components.DayCell
+import com.devcampus.snoozeloo.alarm.presentation.edit.components.DaysCell
+import com.devcampus.snoozeloo.alarm.presentation.edit.components.EditAlarmScaffold
+import com.devcampus.snoozeloo.alarm.presentation.edit.components.SliderCell
+import com.devcampus.snoozeloo.alarm.presentation.edit.components.TextCell
+import com.devcampus.snoozeloo.alarm.presentation.edit.components.TimeColon
+import com.devcampus.snoozeloo.alarm.presentation.edit.components.TimePickerDialog
+import com.devcampus.snoozeloo.alarm.presentation.edit.components.TitleInput
+import com.devcampus.snoozeloo.alarm.presentation.edit.components.ToggleCell
+import com.devcampus.snoozeloo.core.presentation.ObserveAsEvents
+import com.devcampus.snoozeloo.ringtone.domain.Ringtone
 import com.devcampus.snoozeloo.ui.theme.SnoozelooBackground
 import com.devcampus.snoozeloo.ui.theme.montserrat
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.withContext
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
-import java.time.DayOfWeek
+import java.time.LocalTime
 
 sealed interface EditAlarmEvent {
     data object AlarmSaved : EditAlarmEvent
@@ -61,13 +82,21 @@ sealed interface EditAlarmEvent {
 @Composable
 fun EditAlarmScreenRoot(
     alarmId: Long?,
+    ringtoneFromList: Ringtone?,
     navigateBack: () -> Unit,
+    navigateToRingtoneList: (Ringtone) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: EditAlarmViewModel = koinViewModel<EditAlarmViewModel>(parameters = { parametersOf(alarmId) })
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    ObserveAsEvents(viewModel.events) { event ->
+    LaunchedEffect(ringtoneFromList) {
+        if (ringtoneFromList != null) {
+            viewModel.onAction(EditAlarmAction.OnRingtoneChanged(ringtoneFromList))
+        }
+    }
+
+    ObserveAsEvents(viewModel.events) { event: EditAlarmEvent ->
         when (event) {
             EditAlarmEvent.AlarmSaved -> navigateBack()
         }
@@ -75,6 +104,7 @@ fun EditAlarmScreenRoot(
 
     EditAlarmScreen(
         navigateBack = navigateBack,
+        navigateToRingtoneList = navigateToRingtoneList,
         state = state,
         onAction = viewModel::onAction,
         modifier = modifier
@@ -87,266 +117,255 @@ fun EditAlarmScreenRoot(
 @Composable
 fun EditAlarmScreen(
     navigateBack: () -> Unit,
+    navigateToRingtoneList: (Ringtone) -> Unit,
     onAction: (EditAlarmAction) -> Unit,
     state: EditAlarmState,
     modifier: Modifier = Modifier
 ) {
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Box(
-                        modifier = Modifier
-                            .size(32.dp)
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(Color(0xFFE6E6E6))
-                            .clickable {
-                                navigateBack()
-                            }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Clear,
-                            contentDescription = null,
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .wrapContentSize(),
-                            tint = SnoozelooBackground
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors().copy(
-                    containerColor = Color.Transparent
-                ),
-                windowInsets = TopAppBarDefaults.windowInsets
-                    .only(WindowInsetsSides.Top)
-                    .union(WindowInsets(right = 16.dp)),
-                actions = {
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(100f))
-                            .background(
-                                if(state.isSaveEnabled) {
-                                    MaterialTheme.colorScheme.primary
-                                } else {
-                                    Color(0xFFE6E6E6)
-                                }
-                            )
-                            .clickable(state.isSaveEnabled) {
-                                onAction(EditAlarmAction.OnSave)
-                            }
-                            .padding(vertical = 6.dp, horizontal = 16.dp)
-                    ) {
-                        Text(
-                            text = "Save",
-                            style = TextStyle(
-                                fontWeight = FontWeight.SemiBold,
-                                fontFamily = montserrat,
-                                fontSize = 16.sp
-                            ),
-                            color = Color.White
-                        )
-                    }
-                }
-            )
+    // In the event the edit title popup is visible, lets close that when a user uses the
+    // system back navigation
+    BackHandler(state.showEditTitle) {
+        onAction(EditAlarmAction.HideEditTitle)
+    }
+
+    EditAlarmScaffold(
+        navigateBack = {
+            navigateBack()
+        },
+        onSave = {
+            onAction(EditAlarmAction.OnSave)
         }
     ) { innerPadding ->
 
-        Column(
+        LazyColumn(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
                 .padding(horizontal = 16.dp)
         ) {
-            TextCell(
-                title = "Alarm Name",
-                subtitle = "Work",
-                onClick = { }
-            )
-            DaysCell(
-                title = "Repeat",
-                days = state.alarm?.days ?: listOf(),
-                onDayClicked = {
-                    onAction(EditAlarmAction.DayClicked(it))
-                }
-            )
-            TextCell(
-                title = "Alarm Ringtone",
-                subtitle = "Default",
-                onClick = { }
-            )
-            SliderCell(
-                title = "Alarm Volume",
-                value = state.alarm?.volume?.toFloat() ?: 100f,
-                onValueChanged = { onAction(EditAlarmAction.OnVolumeChanged(it.toInt())) }
-            )
-            ToggleCell(
-                title = "Vibrate",
-                checked = state.alarm?.enabled ?: false,
-                onCheckedChanged = { onAction(EditAlarmAction.ToggleVibrate(it)) }
-            )
+
+            item {
+                TimeCell(
+                    time = state.alarm?.time ?: LocalTime.of(0,0),
+                    onClick = {
+                        onAction(EditAlarmAction.ShowTimePicker)
+                    }
+                )
+            }
+
+            item {
+                TextCell(
+                    title = "Alarm Name",
+                    subtitle = state.alarm?.title ?: "",
+                    onClick = {
+                        onAction(EditAlarmAction.ShowEditTitle)
+                    }
+                )
+            }
+
+            item {
+                DaysCell(
+                    title = "Repeat",
+                    days = state.alarm?.days ?: listOf(),
+                    onDayClicked = {
+                        onAction(EditAlarmAction.DayClicked(it))
+                    }
+                )
+            }
+
+            item {
+                TextCell(
+                    title = "Alarm Ringtone",
+                    subtitle = state.alarm?.ringtone?.name ?: "Silent",
+                    onClick = {
+                        state.alarm?.ringtone?.let {
+                            navigateToRingtoneList(it)
+                        }
+                    }
+                )
+            }
+
+            item {
+                SliderCell(
+                    title = "Alarm Volume",
+                    value = state.alarm?.volume?.toFloat() ?: 100f,
+                    onValueChanged = { onAction(EditAlarmAction.OnVolumeChanged(it.toInt())) }
+                )
+            }
+
+            item {
+                ToggleCell(
+                    title = "Vibrate",
+                    checked = state.alarm?.vibrate ?: false,
+                    onCheckedChanged = { onAction(EditAlarmAction.ToggleVibrate(it)) }
+                )
+            }
         }
     }
-}
 
-@Composable
-private fun TextCell(
-    title: String,
-    subtitle: String,
-    onClick: () -> Unit,
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(10.dp))
-            .background(Color.White)
-            .clickable {
-                onClick()
+    if (state.showTimePicker) {
+        TimePickerDialog(
+            state = state.timePickerState,
+            onDismiss = { onAction(EditAlarmAction.HideTimePicker) },
+            onConfirm = {
+                // Read the final hour and minute from the state
+                val hour = state.timePickerState.hour
+                val minute = state.timePickerState.minute
+                onAction(EditAlarmAction.OnTimeChanged(LocalTime.of(hour, minute)))
             }
-            .padding(16.dp)
-    ) {
-        Text(
-            text = title,
-            style = TextStyle(
-                color = Color(0xFF0D0F19),
-                fontSize = 16.sp,
-                fontFamily = montserrat,
-                fontWeight = FontWeight.SemiBold
-            )
         )
-        Text(
-            text = subtitle,
-            style = TextStyle(
-                color = Color(0xFF858585),
-                fontSize = 14.sp,
-                fontFamily = montserrat,
-                fontWeight = FontWeight.Medium
-            )
+    }
+
+    AnimatedVisibility(
+        visible = state.showEditTitle,
+        enter = fadeIn(),
+        exit = fadeOut()
+    ) {
+        TitleInput(
+            initialTitle = state.alarm?.title,
+            onHide = {
+                onAction(EditAlarmAction.HideEditTitle)
+            },
+            onSaveTitle = {
+                onAction(EditAlarmAction.OnSaveTitle(it))
+            }
         )
     }
 }
 
 @Composable
-private fun ToggleCell(
-    title: String,
-    checked: Boolean,
-    onCheckedChanged: (Boolean) -> Unit,
+private fun TimeCell(
+    time: LocalTime,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // display logic for 12 hour clock
+    val isAm = time.hour < 12
+    var hour = time.hour
+    if (!isAm && hour > 12) hour -= 12
+    if (isAm && hour == 0) hour = 12
+    val minute = time.minute
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(10.dp))
-            .background(Color.White)
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-    ) {
-        Text(
-            text = title,
-            style = TextStyle(
-                color = Color(0xFF0D0F19),
-                fontSize = 16.sp,
-                fontFamily = montserrat,
-                fontWeight = FontWeight.SemiBold
-            )
-        )
-        Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChanged,
-            colors = SwitchDefaults.colors().copy(
-                uncheckedTrackColor = Color(0xFFBCC6FF),
-                uncheckedThumbColor = Color.White,
-                uncheckedBorderColor = Color.White,
-            ),
-        )
-    }
-}
-
-@Composable
-private fun DaysCell(
-    title: String,
-    days: List<DayOfWeek>,
-    onDayClicked: (DayOfWeek) -> Unit,
-) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(10.dp))
             .background(Color.White)
             .padding(16.dp)
+            .height(95.dp)
     ) {
-        Text(
-            text = title,
-            style = TextStyle(
-                color = Color(0xFF0D0F19),
-                fontSize = 16.sp,
-                fontFamily = montserrat,
-                fontWeight = FontWeight.SemiBold
+        Box(
+            modifier = Modifier
+                .fillMaxHeight()
+                .weight(1f)
+                .clip(RoundedCornerShape(10.dp))
+                .background(Color(0xFFF6F6F6))
+                .clickable {
+                    onClick()
+                }
+        ) {
+            Text(
+                text = hour.toString().padStart(2, '0'),
+                style = TextStyle(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 44.sp,
+                    color = Color(0xFF858585),
+                    textAlign = TextAlign.Center
+                ),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .wrapContentSize()
             )
-        )
-        DayCell(
-            days = days,
-            onDayClicked = onDayClicked
-        )
-    }
-}
-
-@Composable
-private fun SliderCell(
-    title: String,
-    value: Float,
-    onValueChanged: (Float) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(6.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(10.dp))
-            .background(Color.White)
-            .padding(16.dp)
-    ) {
-        Text(
-            text = title,
-            style = TextStyle(
-                color = Color(0xFF0D0F19),
-                fontSize = 16.sp,
-                fontFamily = montserrat,
-                fontWeight = FontWeight.SemiBold
+        }
+        // colon between hour and minute
+        TimeColon()
+        Box(
+            modifier = Modifier
+                .fillMaxHeight()
+                .weight(1f)
+                .clip(RoundedCornerShape(10.dp))
+                .background(Color(0xFFF6F6F6))
+                .clickable {
+                    onClick()
+                }
+        ) {
+            Text(
+                text = minute.toString().padStart(2, '0'),
+                style = TextStyle(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 44.sp,
+                    color = Color(0xFF858585),
+                    textAlign = TextAlign.Center
+                ),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .wrapContentSize()
             )
-        )
+        }
+        Column(
+            modifier = Modifier
+                .width(50.dp)
+                .fillMaxHeight()
+                .clip(RoundedCornerShape(8.dp))
+                .border(1.dp, Color.Black, RoundedCornerShape(8.dp))
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .then(
+                        if (isAm) {
+                            Modifier.background(Color(0xFF4664FF))
+                        } else {
+                            Modifier
+                        }
+                    )
+                    .clickable {
+                        onClick()
+                    }
 
-        Slider(
-            value = value,
-            onValueChange = onValueChanged,
-            valueRange = 0f..100f, // Range from 0 to 100
-            steps = 99,
-            colors = SliderDefaults.colors().copy(
-                activeTickColor = Color.Transparent,
-                inactiveTickColor = Color.Transparent,
-                inactiveTrackColor = Color(0xFFECEFFF)
-            )
-        )
-    }
-}
-
-@Composable
-fun <T> ObserveAsEvents(
-    flow: Flow<T>,
-    key1: Any? = null,
-    key2: Any? = null,
-    onEvent: (T) -> Unit
-) {
-    val lifecycleOwner = LocalLifecycleOwner.current
-    LaunchedEffect(flow, lifecycleOwner.lifecycle, key1, key2) {
-        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-            withContext(Dispatchers.Main.immediate) {
-                flow.collect(onEvent)
+            ) {
+                Text(
+                    text = "AM",
+                    color = if (isAm) Color.White else Color.Black,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .wrapContentSize()
+                )
+            }
+            Spacer(modifier = Modifier
+                .height(1.dp)
+                .fillMaxWidth()
+                .background(Color.Black))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .then(
+                        if (!isAm) {
+                            Modifier.background(Color(0xFF4664FF))
+                        } else {
+                            Modifier
+                        }
+                    )
+                    .clickable {
+                        onClick()
+                    }
+            ) {
+                Text(
+                    text = "PM",
+                    color = if (!isAm) Color.White else Color.Black,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .wrapContentSize()
+                )
             }
         }
     }

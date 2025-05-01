@@ -30,7 +30,7 @@ interface AlarmDao {
     entities = [
         AlarmEntity::class,
     ],
-    version = 2
+    version = 1
 )
 abstract class SnoozelooDatabase : RoomDatabase() {
     abstract val alarmDao: AlarmDao

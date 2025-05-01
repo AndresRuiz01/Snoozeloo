@@ -40,6 +40,7 @@ fun AlarmCell(
     onEnabledChanged: (Boolean) -> Unit,
     days: List<DayOfWeek>,
     onAlarmClicked: () -> Unit,
+    onDayClicked: (DayOfWeek) -> Unit,
     modifier: Modifier = Modifier
 ) {
     
@@ -60,15 +61,18 @@ fun AlarmCell(
             Column(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Text(
-                    text = title,
-                    style = TextStyle(
-                        color = Color(0xFF0D0F19),
-                        fontSize = 16.sp,
-                        fontFamily = montserrat,
-                        fontWeight = FontWeight.SemiBold
+                // only show title if it's not empty
+                if (title.isNotEmpty()) {
+                    Text(
+                        text = title,
+                        style = TextStyle(
+                            color = Color(0xFF0D0F19),
+                            fontSize = 16.sp,
+                            fontFamily = montserrat,
+                            fontWeight = FontWeight.SemiBold
+                        )
                     )
-                )
+                }
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                     verticalAlignment = Alignment.Bottom
@@ -123,7 +127,7 @@ fun AlarmCell(
         }
         DayCell(
             days = days,
-            onDayClicked = { }
+            onDayClicked = onDayClicked
         )
         Text(
             text = getBedtimeString(time),
@@ -162,7 +166,8 @@ private fun AlarmCellPreview() {
                     DayOfWeek.FRIDAY
                 ),
                 onEnabledChanged = { },
-                onAlarmClicked = { }
+                onAlarmClicked = { },
+                onDayClicked = { }
             )
             AlarmCell(
                 title = "Education",
@@ -174,7 +179,8 @@ private fun AlarmCellPreview() {
                     DayOfWeek.FRIDAY
                 ),
                 onEnabledChanged = { },
-                onAlarmClicked = { }
+                onAlarmClicked = { },
+                onDayClicked = { }
             )
             AlarmCell(
                 title = "Dinner",
@@ -190,7 +196,8 @@ private fun AlarmCellPreview() {
                     DayOfWeek.SUNDAY,
                 ),
                 onEnabledChanged = { },
-                onAlarmClicked = { }
+                onAlarmClicked = { },
+                onDayClicked = { }
             )
         }
     }

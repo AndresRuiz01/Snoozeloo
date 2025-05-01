@@ -1,5 +1,7 @@
 package com.devcampus.snoozeloo.alarm.domain.models
 
+import com.devcampus.snoozeloo.ringtone.domain.Ringtone
+import com.devcampus.snoozeloo.ringtone.domain.silentRingtone
 import java.time.DayOfWeek
 import java.time.LocalTime
 
@@ -9,9 +11,12 @@ data class Alarm(
     val time: LocalTime,
     val days: List<DayOfWeek>,
     val volume: Int,
+    val ringtone: Ringtone,
     val vibrate: Boolean,
     val enabled: Boolean,
 ) {
+    val isRepeating = days.isNotEmpty()
+
     companion object {
         val defaultAlarm = Alarm(
             alarmId = 0,
@@ -20,6 +25,7 @@ data class Alarm(
             days = listOf(),
             volume = 100,
             vibrate = true,
+            ringtone = silentRingtone,
             enabled = true
         )
     }

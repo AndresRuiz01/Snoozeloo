@@ -11,7 +11,7 @@ class SnoozelooApplication : Application() {
         super.onCreate()
         startKoin {
             androidContext(this@SnoozelooApplication)
-             modules(alarmModule)
+            modules(alarmModule)
         }
     }
 }

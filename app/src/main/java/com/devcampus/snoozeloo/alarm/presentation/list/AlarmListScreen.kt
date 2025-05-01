@@ -23,9 +23,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
@@ -132,9 +129,14 @@ fun AlarmListScreen(
                             },
                             onAlarmClicked = {
                                 navigateToEditAlarm(alarm.alarmId)
+                            },
+                            onDayClicked = { day ->
+                                onAction(AlarmListAction.ToggleDay(alarm.alarmId, day))
                             }
                         )
                     }
+
+                    // space for FAB if bottom of alarm list is reached
                     item { Spacer(modifier = Modifier.height(120.dp)) }
                 }
             }
