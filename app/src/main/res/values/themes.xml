@@ -2,4 +2,12 @@
 <resources>
 
     <style name="Theme.Snoozeloo" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <style name="Theme.Snoozeloo.Splash" parent="Theme.SplashScreen">
+        <item name="android:windowSplashScreenBackground">#4664FF</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/clock</item>
+        <item name="android:windowSplashScreenAnimationDuration">1500</item>
+        <item name="postSplashScreenTheme">@style/Theme.Snoozeloo</item>
+    </style>
+
 </resources>

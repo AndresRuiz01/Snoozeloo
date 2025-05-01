@@ -12,7 +12,7 @@ android {
 
     defaultConfig {
         applicationId = "com.devcampus.snoozeloo"
-        minSdk = 26
+        minSdk = 31
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -69,5 +69,7 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.room.ktx)
+
+    implementation(libs.androidx.core.splashscreen)
 
 }
