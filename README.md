@@ -26,26 +26,12 @@ UI Architecture: MVI
 
 Project Achitecture: Clean Achitecture 
 
-## Images
-
-Alarm List:
+## App Images
 
 <img src="https://github.com/user-attachments/assets/4a86ea29-d032-4d92-b6af-058d721ce977" width="300">
-
-Alarm Details:
-
 <img src="https://github.com/user-attachments/assets/5f6751b4-d11a-43ee-a1e0-d9e28330f0b9" width="300">
-
-Edit Title:
-
 <img src="https://github.com/user-attachments/assets/ec44d925-33b1-4f0f-8edf-7287ddd7c2da" width="300">
-
-Select Sound:
-
 <img src="https://github.com/user-attachments/assets/7bf78d57-0491-46fb-920b-259844e32bb4" width="300">
-
-Select Time:
-
 <img src="https://github.com/user-attachments/assets/51739f5f-f15d-4264-a4c1-b3f351fede19" width="300">
 
 
