@@ -1,7 +1,7 @@
 # Snoozeloo
 A simple alarm clock application that supports the following features:
 - One time alarms
-- Reoccuring alarms
+- Recurring alarms
 - Ringtone Selection
 - Enabling Vibration
 - Volume Control 
